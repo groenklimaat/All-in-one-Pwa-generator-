@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0ea5e9"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="rocket" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2e8f0"/>
+      <stop offset="1" stop-color="#94a3b8"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fef08a"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <ellipse cx="256" cy="256" rx="200" ry="70"
+           fill="none" stroke="#38bdf8" stroke-width="6"
+           stroke-dasharray="14 12" opacity="0.5"
+           transform="rotate(-25 256 256)"/>
+
+  <g transform="translate(300, 300)">
+    <rect x="0" y="0" width="140" height="140" rx="14"
+          fill="#1e40af" stroke="#0f172a" stroke-width="8"/>
+    <rect x="0" y="0" width="140" height="34" rx="14" fill="#3b82f6"/>
+    <rect x="63" y="0" width="14" height="140" fill="#0f172a"/>
+    <rect x="0" y="55" width="140" height="14" fill="#0f172a"/>
+  </g>
+
+  <g transform="translate(150, 100)">
+    <path d="M70 0 C120 40, 140 120, 140 220 L0 220 C0 120, 20 40, 70 0 Z"
+          fill="url(#rocket)" stroke="#0f172a" stroke-width="8"/>
+    <path d="M70 20 C100 50, 115 110, 118 180 L22 180 C25 110, 40 50, 70 20 Z"
+          fill="#f8fafc" opacity="0.4"/>
+    <circle cx="70" cy="110" r="28" fill="#0ea5e9" stroke="#0f172a" stroke-width="8"/>
+    <circle cx="70" cy="110" r="14" fill="#7dd3fc"/>
+    <path d="M0 160 L-45 240 L0 220 Z" fill="#ef4444" stroke="#0f172a" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M140 160 L185 240 L140 220 Z" fill="#ef4444" stroke="#0f172a" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M40 230 Q70 320 100 230 Z" fill="url(#flame)"/>
+    <path d="M55 240 Q70 290 85 240 Z" fill="#fde68a"/>
+  </g>
+
+  <g fill="#38bdf8">
+    <circle cx="80" cy="80" r="6"/>
+    <circle cx="440" cy="120" r="5"/>
+    <circle cx="430" cy="420" r="7"/>
+    <circle cx="70" cy="440" r="4"/>
+  </g>
+</svg>

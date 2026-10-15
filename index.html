@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PWA Generator</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0ea5e9">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: #0f172a; color: #e2e8f0;
+    margin: 0; padding: 2rem 1rem; min-height: 100vh;
+  }
+  .container {
+    max-width: 800px; margin: 0 auto;
+    background: #1e293b; padding: 2rem;
+    border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.4);
+  }
+  h1 { margin-top: 0; color: #38bdf8; }
+  h2 { color: #7dd3fc; border-bottom: 1px solid #334155; padding-bottom: .4rem; margin-top: 2rem; }
+  label { display: block; margin: .8rem 0 .3rem; font-weight: 600; font-size: .9rem; }
+  input, select {
+    width: 100%; padding: .6rem .8rem;
+    background: #0f172a; color: #e2e8f0;
+    border: 1px solid #334155; border-radius: 6px;
+    font-family: inherit; font-size: .9rem;
+  }
+  input[type=file] { padding: .4rem; }
+  input[type=color] { padding: 0; height: 42px; cursor: pointer; }
+  button {
+    background: #0ea5e9; color: white; border: 0;
+    padding: .8rem 1.4rem; border-radius: 6px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    margin-top: 1rem; transition: background .2s;
+  }
+  button:hover { background: #0284c7; }
+  button.secondary { background: #334155; }
+  button.secondary:hover { background: #475569; }
+  pre {
+    background: #0f172a; padding: 1rem; border-radius: 6px;
+    overflow-x: auto; border: 1px solid #334155;
+    font-size: .75rem; max-height: 250px; overflow-y: auto;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 140px; }
+  .status { margin-top: 1rem; padding: .8rem 1rem; border-radius: 6px; display: none; }
+  .status.ok { background: #064e3b; color: #6ee7b7; display: block; }
+  .status.err { background: #7f1d1d; color: #fca5a5; display: block; }
+  .hint { font-size: .8rem; color: #94a3b8; margin-top: .3rem; }
+  .icon-preview { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+  .icon-preview .box {
+    background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; padding: .6rem; text-align: center;
+  }
+  .icon-preview img {
+    display: block; border-radius: 4px;
+    background: repeating-conic-gradient(#334155 0 25%, #1e293b 0 50%) 50% / 16px 16px;
+  }
+  .icon-preview .label { font-size: .7rem; color: #94a3b8; margin-top: .4rem; }
+  footer { text-align: center; padding: 2rem 1rem; font-size: .85rem; color: #94a3b8; }
+  footer a { color: #7dd3fc; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🚀 PWA Generator</h1>
+  <p>Upload je HTML-bestand en een icoon (SVG of PNG) → download een complete PWA-package.</p>
+
+  <h2>1. HTML-bestand</h2>
+  <label for="htmlFile">Je HTML-bestand *</label>
+  <input type="file" id="htmlFile" accept=".html,.htm,text/html">
+
+  <h2>2. Icoon (SVG of PNG)</h2>
+  <label for="iconFile">Icoon-bestand — SVG, PNG, JPG of WebP</label>
+  <input type="file" id="iconFile" accept=".svg,image/svg+xml,image/png,image/jpeg,image/webp">
+  <div class="hint">💡 SVG wordt op volledige resolutie gerenderd → perfecte PNG's.</div>
+
+  <h2>3. App-gegevens</h2>
+  <div class="row">
+    <div><label for="appName">App naam</label><input type="text" id="appName" value="Mijn PWA App"></div>
+    <div><label for="shortName">Korte naam</label><input type="text" id="shortName" value="MijnApp"></div>
+  </div>
+  <div class="row">
+    <div><label for="themeColor">Theme kleur</label><input type="color" id="themeColor" value="#0ea5e9"></div>
+    <div><label for="bgColor">Achtergrond</label><input type="color" id="bgColor" value="#0f172a"></div>
+    <div>
+      <label for="display">Display</label>
+      <select id="display">
+        <option value="standalone" selected>standalone</option>
+        <option value="fullscreen">fullscreen</option>
+        <option value="minimal-ui">minimal-ui</option>
+      </select>
+    </div>
+  </div>
+  <label for="description">Beschrijving</label>
+  <input type="text" id="description" value="Een Progressive Web App">
+
+  <button id="generateBtn">✨ Genereer PWA</button>
+  <div id="status" class="status"></div>
+
+  <div id="output" style="display:none;">
+    <h2>4. Iconen</h2>
+    <div class="icon-preview" id="iconPreview"></div>
+
+    <h2>5. Bestanden</h2>
+    <h3>manifest.json</h3>
+    <pre id="manifestOut"></pre>
+    <h3>service-worker.js</h3>
+    <pre id="swOut"></pre>
+    <h3>index.html (PWA-klaar)</h3>
+    <pre id="htmlOut"></pre>
+    <h3>favicon.svg</h3>
+    <pre id="faviconOut"></pre>
+
+    <button id="downloadBtn">⬇️ Download ZIP</button>
+  </div>
+</div>
+<footer>PWA Generator · <a href="./privacy.html">Privacy</a></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function() {
+  const $ = id => document.getElementById(id);
+  let generated = null;
+
+  function readText(f) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsText(f);
+    });
+  }
+  function readBuffer(f) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsArrayBuffer(f);
+    });
+  }
+  function loadImg(src) {
+    return new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('Afbeelding laden mislukt'));
+      i.src = src;
+    });
+  }
+  function isSvg(f) {
+    return f.type === 'image/svg+xml' || /\.svg$/i.test(f.name);
+  }
+
+  async function resize(img, size, fit) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    const sw = img.naturalWidth || img.width || size;
+    const sh = img.naturalHeight || img.height || size;
+    const r = fit === 'cover'
+      ? Math.max(size / sw, size / sh)
+      : Math.min(size / sw, size / sh);
+    const w = sw * r, h = sh * r;
+    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    return new Promise(res => c.toBlob(res, 'image/png'));
+  }
+
+  async function maskable(img, size) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = $('bgColor').value;
+    ctx.fillRect(0, 0, size, size);
+    const sw = img.naturalWidth || img.width || size;
+    const sh = img.naturalHeight || img.height || size;
+    const safe = size * 0.8;
+    const r = Math.min(safe / sw, safe / sh);
+    const w = sw * r, h = sh * r;
+    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    return new Promise(res => c.toBlob(res, 'image/png'));
+  }
+
+  function placeholder(size) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, size, size);
+    g.addColorStop(0, $('themeColor').value);
+    g.addColorStop(1, $('bgColor').value);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${size * 0.45}px system-ui`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const L = ($('shortName').value || 'A').trim().charAt(0).toUpperCase();
+    ctx.fillText(L, size / 2, size / 2 + size * 0.03);
+    return new Promise(res => c.toBlob(res, 'image/png'));
+  }
+
+  function placeholderSvg() {
+    const L = ($('shortName').value || 'A').trim().charAt(0).toUpperCase();
+    const t = $('themeColor').value, b = $('bgColor').value;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="${t}"/><stop offset="1" stop-color="${b}"/>
+  </linearGradient></defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <text x="32" y="44" font-family="system-ui" font-size="36" font-weight="800"
+        fill="#fff" text-anchor="middle">${L}</text>
+</svg>`;
+  }
+
+  function injectPWA(html) {
+    const t = $('themeColor').value;
+    const head = `
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="${t}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+`;
+    const sw = `
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(r => console.log('SW:', r.scope))
+        .catch(e => console.error('SW error:', e));
+    });
+  }
+<\/script>
+`;
+    let out = html;
+    const hasM = /rel=["']manifest["']/i.test(out);
+    const hasSW = /serviceWorker\.register/i.test(out);
+
+    if (/<head[^>]*>/i.test(out)) {
+      if (!hasM) out = out.replace(/<head([^>]*)>/i, `<head$1>${head}`);
+    } else {
+      out = `<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">${head}</head>\n<body>\n${out}\n</body>\n</html>`;
+    }
+    if (!hasSW) {
+      if (/<\/body>/i.test(out)) out = out.replace(/<\/body>/i, sw + '</body>');
+      else out += sw;
+    }
+    return out;
+  }
+
+  function buildManifest() {
+    return {
+      name: $('appName').value.trim() || 'Mijn PWA App',
+      short_name: $('shortName').value.trim() || 'App',
+      description: $('description').value.trim(),
+      start_url: './index.html',
+      scope: './',
+      display: $('display').value,
+      orientation: 'any',
+      background_color: $('bgColor').value,
+      theme_color: $('themeColor').value,
+      lang: 'nl',
+      icons: [
+        { src: './icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: './icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: './icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+      ]
+    };
+  }
+
+  function buildSW() {
+    return `const CACHE = 'pwa-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './privacy.html',
+  './manifest.json',
+  './favicon.svg',
+  './icon-192.png',
+  './icon-512.png'
+];
+
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => Promise.all(ASSETS.map(u => c.add(u).catch(() => null))))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(k => Promise.all(
+      k.filter(x => x !== CACHE).map(x => caches.delete(x))
+    )).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  let u; try { u = new URL(req.url); } catch { return; }
+  if (u.origin !== self.location.origin) return;
+
+  e.respondWith(
+    caches.match(req).then(c => c || fetch(req).then(res => {
+      if (!res || res.status !== 200 || res.type === 'opaque') return res;
+      const copy = res.clone();
+      caches.open(CACHE).then(cc => cc.put(req, copy)).catch(() => {});
+      return res;
+    }).catch(() => caches.match('./index.html')))
+  );
+});
+`;
+  }
+
+  async function generate() {
+    const st = $('status');
+    st.className = 'status'; st.textContent = '';
+
+    const htmlFile = $('htmlFile').files[0];
+    if (!htmlFile) {
+      st.className = 'status err';
+      st.textContent = '❌ Selecteer eerst een HTML-bestand.';
+      return;
+    }
+
+    try {
+      const rawHtml = await readText(htmlFile);
+
+      let i192, i512, svgText;
+      const iconFile = $('iconFile').files[0];
+
+      if (iconFile) {
+        const buf = await readBuffer(iconFile);
+        const mime = isSvg(iconFile) ? 'image/svg+xml' : (iconFile.type || 'image/png');
+        const blob = new Blob([buf], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const img = await loadImg(url);
+
+        i192 = await resize(img, 192, 'contain');
+        i512 = await resize(img, 512, 'contain');
+        svgText = isSvg(iconFile) ? await readText(iconFile) : placeholderSvg();
+        URL.revokeObjectURL(url);
+      } else {
+        i192 = await placeholder(192);
+        i512 = await placeholder(512);
+        svgText = placeholderSvg();
+      }
+
+      // Preview
+      const pv = $('iconPreview');
+      pv.innerHTML = '';
+      [
+        { src: URL.createObjectURL(i192), label: '192×192 PNG' },
+        { src: URL.createObjectURL(i512), label: '512×512 PNG' },
+        { src: 'data:image/svg+xml;utf8,' + encodeURIComponent(svgText), label: 'favicon.svg' }
+      ].forEach(p => {
+        const w = document.createElement('div');
+        w.className = 'box';
+        const im = document.createElement('img');
+        im.src = p.src; im.width = im.height = 80;
+        const lb = document.createElement('div');
+        lb.className = 'label'; lb.textContent = p.label;
+        w.appendChild(im); w.appendChild(lb);
+        pv.appendChild(w);
+      });
+
+      generated = {
+        manifest: JSON.stringify(buildManifest(), null, 2),
+        sw: buildSW(),
+        html: injectPWA(rawHtml),
+        faviconSvg: svgText,
+        i192, i512,
+        appName: $('shortName').value.trim() || 'pwa-app'
+      };
+
+      $('manifestOut').textContent = generated.manifest;
+      $('swOut').textContent = generated.sw;
+      $('htmlOut').textContent = generated.html;
+      $('faviconOut').textContent = generated.faviconSvg;
+      $('output').style.display = 'block';
+
+      st.className = 'status ok';
+      st.textContent = '✅ Klaar! Download de ZIP en zet alles in de root van je GitHub repo.';
+    } catch (err) {
+      console.error(err);
+      st.className = 'status err';
+      st.textContent = '❌ Fout: ' + err.message;
+    }
+  }
+
+  async function downloadZip() {
+    if (!generated) return;
+    const zip = new JSZip();
+    zip.file('index.html', generated.html);
+    zip.file('manifest.json', generated.manifest);
+    zip.file('service-worker.js', generated.sw);
+    zip.file('favicon.svg', generated.faviconSvg);
+    zip.file('icon-192.png', generated.i192);
+    zip.file('icon-512.png', generated.i512);
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (generated.appName || 'pwa') + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  $('generateBtn').addEventListener('click', generate);
+  $('downloadBtn').addEventListener('click', downloadZip);
+
+  // Service worker registratie voor de generator zelf
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
